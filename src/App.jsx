@@ -64,6 +64,25 @@ export default function App() {
     return () => observer.disconnect()
   }, [])
 
+  // Fetch real historical inflation from FRED once on load, and ground the
+  // default assumption in it. If the call fails, we quietly keep the default.
+  const [histInflation, setHistInflation] = useState(null)
+  const [histYears, setHistYears] = useState(null)
+  useEffect(() => {
+    fetch(`${API_BASE}/api/inflation`)
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error('bad response'))))
+      .then((d) => {
+        if (typeof d.rate === 'number') {
+          setHistInflation(d.rate)
+          setHistYears(d.years)
+          setInflation(d.rate)
+        }
+      })
+      .catch(() => {
+        /* silent fallback: keep the 3% default */
+      })
+  }, [])
+
   const years = Math.max(0, retirementAge - currentAge)
   const retirementYear = new Date().getFullYear() + years
 
@@ -337,7 +356,11 @@ export default function App() {
               min={0}
               max={6}
               step={0.1}
-              hint="How fast prices rise. History runs about 2 to 3% a year."
+              hint={
+                histInflation
+                  ? `Over the last ${histYears} years, inflation has averaged ${histInflation}% a year (live FRED data).`
+                  : 'How fast prices rise. History runs about 2 to 3% a year.'
+              }
             />
             <Slider
               label="Investment return"
