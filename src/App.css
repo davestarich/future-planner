@@ -458,6 +458,144 @@ input[type='number']:focus {
   color: var(--ink);
 }
 
+.ss {
+  margin-top: 8px;
+}
+.ss-badge {
+  margin-left: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.ss-body {
+  margin-top: 10px;
+  display: grid;
+  gap: 16px;
+}
+.ss-intro {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.ss-modes {
+  display: flex;
+  gap: 8px;
+}
+.ss-mode {
+  flex: 1;
+  padding: 9px 10px;
+  font-size: 14px;
+  font-weight: 600;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--field-bg);
+  color: var(--muted);
+  cursor: pointer;
+}
+.ss-mode.active {
+  border-color: var(--brand);
+  background: var(--brand-tint);
+  color: var(--brand-deep);
+}
+.ss-estimate {
+  display: grid;
+  gap: 10px;
+}
+.ss-sublabel {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.ss-job {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  font-size: 14px;
+  color: var(--muted);
+}
+.ss-job input[type='number'] {
+  width: 62px;
+  padding: 7px 8px;
+  font-size: 14px;
+  border-radius: 8px;
+}
+.ss-job input.ss-salary {
+  width: 92px;
+}
+.ss-remove {
+  margin-left: auto;
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 50%;
+  background: var(--field-bg);
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+.ss-add {
+  justify-self: start;
+  padding: 7px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  border: 1px dashed var(--line);
+  border-radius: 9px;
+  background: none;
+  color: var(--brand);
+  cursor: pointer;
+}
+.ss-row-2 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+.ss-inline {
+  gap: 4px;
+}
+.ss-inline select {
+  padding: 9px 10px;
+  font-size: 14px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--field-bg);
+  color: var(--ink);
+}
+.ss-couple {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+}
+.ss-result {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  font-size: 15px;
+  color: var(--muted);
+}
+.ss-result strong {
+  font-size: 20px;
+  color: var(--brand-deep);
+}
+.ss-note {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
 .disclaimer {
   margin-top: 28px;
   text-align: center;

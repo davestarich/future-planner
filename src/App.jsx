@@ -1,5 +1,11 @@
 import { useState, useEffect, useRef } from 'react'
-import { computeProjection, computeOnTrack, withdrawalRateForYears, formatMoney } from './lib/calc.js'
+import {
+  computeProjection,
+  computeOnTrack,
+  withdrawalRateForYears,
+  estimateSocialSecurity,
+  formatMoney,
+} from './lib/calc.js'
 
 // In production the AI function is served from the same site (a relative URL).
 // In local dev (Vite on :5173) there's no function, so call the deployed one
@@ -43,6 +49,14 @@ export default function App() {
   const [returnRate, setReturnRate] = useState(7)
   const [planToAge, setPlanToAge] = useState(95)
   const [showAssumptions, setShowAssumptions] = useState(false)
+
+  // Social Security (optional): reduces the spend investments must cover.
+  const [showSS, setShowSS] = useState(false)
+  const [ssMode, setSsMode] = useState('estimate') // 'estimate' | 'known'
+  const [ssKnown, setSsKnown] = useState('')
+  const [ssJobs, setSsJobs] = useState([{ years: '', salary: '' }])
+  const [ssClaimAge, setSsClaimAge] = useState(67)
+  const [ssCouple, setSsCouple] = useState(false)
 
   // AI explanation feature.
   const [explanation, setExplanation] = useState('')
@@ -91,12 +105,33 @@ export default function App() {
   const moneyMustLastYears = Math.max(1, planToAge - retirementAge)
   const withdrawal = withdrawalRateForYears(moneyMustLastYears)
 
+  // Social Security: weighted-average career income from the entered jobs, then
+  // an estimated monthly benefit, then subtract it from the spend investments
+  // must cover. When the user hasn't added anything, the benefit is 0 (no effect).
+  const ssTotalYears = ssJobs.reduce((sum, j) => sum + (Number(j.years) || 0), 0)
+  const ssCareerAvg =
+    ssTotalYears > 0
+      ? ssJobs.reduce((sum, j) => sum + (Number(j.years) || 0) * (Number(j.salary) || 0), 0) /
+        ssTotalYears
+      : 0
+  const ssEstimated = estimateSocialSecurity({
+    careerAvgIncome: ssCareerAvg,
+    claimAge: ssClaimAge,
+    isCouple: ssCouple,
+  })
+  const ssMonthly = ssMode === 'known' ? Number(ssKnown) || 0 : ssEstimated
+  const coveredByInvestments = Math.max(0, monthlySpend - ssMonthly)
+
+  // What the desired spend (not the invested portion) grows to with inflation,
+  // used only for the illustrative note in the assumptions panel.
+  const desiredFutureMonthly = monthlySpend * Math.pow(1 + inflation / 100, years)
+
   // Number inputs normally change value when you scroll the mouse wheel over them,
   // which is annoying while scrolling the page. Blurring on wheel disables that.
   const preventWheelChange = (e) => e.currentTarget.blur()
 
-  const { futureMonthly, targetNominal, targetToday, neededToday } = computeProjection({
-    monthlySpendToday: monthlySpend,
+  const { targetNominal, targetToday, neededToday } = computeProjection({
+    monthlySpendToday: coveredByInvestments,
     yearsToRetirement: years,
     inflationPct: inflation,
     returnPct: returnRate,
@@ -123,6 +158,9 @@ export default function App() {
         `A person wants to spend $${monthlySpend} per month in retirement, in today's dollars. ` +
         `They are ${currentAge} now and plan to retire at ${retirementAge}, which is ${years} years away (the year ${retirementYear}). ` +
         `Assuming ${inflation}% inflation, ${returnRate}% investment return, and planning for the money to last until age ${planToAge} (about a ${withdrawal.toFixed(1)}% withdrawal rate): ` +
+        (ssMonthly > 0
+          ? `Social Security is expected to cover about ${formatMoney(ssMonthly)}/month, so their investments only need to cover ${formatMoney(coveredByInvestments)}/month. `
+          : '') +
         `their retirement target is about ${formatMoney(targetToday)} in today's dollars (${formatMoney(targetNominal)} by ${retirementYear}), ` +
         `and to reach it without saving another dollar they'd need about ${formatMoney(neededToday)} invested today. ` +
         `They currently have ${formatMoney(currentAssets)} invested and add ${formatMoney(monthlyContribution)} per month, ` +
@@ -143,6 +181,12 @@ export default function App() {
       setLoadingExplain(false)
     }
   }
+
+  // Social Security job-list handlers.
+  const addJob = () => setSsJobs((jobs) => [...jobs, { years: '', salary: '' }])
+  const updateJob = (index, field, value) =>
+    setSsJobs((jobs) => jobs.map((j, i) => (i === index ? { ...j, [field]: value } : j)))
+  const removeJob = (index) => setSsJobs((jobs) => jobs.filter((_, i) => i !== index))
 
   return (
     <>
@@ -256,6 +300,138 @@ export default function App() {
             year.
           </p>
         </div>
+      </section>
+
+      <section className="ss">
+        <button className="accordion-toggle" onClick={() => setShowSS((v) => !v)}>
+          {showSS ? 'Hide Social Security' : 'Include Social Security (optional)'}
+          {!showSS && ssMonthly > 0 && (
+            <span className="ss-badge">covers {formatMoney(ssMonthly)}/mo</span>
+          )}
+          <span className="chev">{showSS ? '▲' : '▼'}</span>
+        </button>
+        {showSS && (
+          <div className="card ss-body">
+            <p className="ss-intro">
+              Social Security can cover a big slice of your retirement income, which shrinks the
+              nest egg you need.
+              <InfoTip>
+                This is a ballpark. For your exact benefit, sign in at SSA.gov, get their estimate,
+                and enter it with "I know my number."
+              </InfoTip>
+            </p>
+
+            <div className="ss-modes">
+              <button
+                type="button"
+                className={`ss-mode ${ssMode === 'known' ? 'active' : ''}`}
+                onClick={() => setSsMode('known')}
+              >
+                I know my number
+              </button>
+              <button
+                type="button"
+                className={`ss-mode ${ssMode === 'estimate' ? 'active' : ''}`}
+                onClick={() => setSsMode('estimate')}
+              >
+                Help me estimate it
+              </button>
+            </div>
+
+            {ssMode === 'known' ? (
+              <label className="field">
+                <span className="q">Your expected monthly benefit</span>
+                <small>The monthly amount from your SSA.gov statement (today's dollars).</small>
+                <div className="money-input">
+                  <span className="prefix">$</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="50"
+                    value={ssKnown}
+                    onChange={(e) => setSsKnown(e.target.value)}
+                    onWheel={preventWheelChange}
+                  />
+                  <span className="suffix">/ month</span>
+                </div>
+              </label>
+            ) : (
+              <div className="ss-estimate">
+                <p className="ss-sublabel">Your past jobs</p>
+                {ssJobs.map((job, i) => (
+                  <div className="ss-job" key={i}>
+                    <span className="ss-job-text">Worked</span>
+                    <input
+                      type="number"
+                      className="ss-years"
+                      min="0"
+                      max="50"
+                      placeholder="0"
+                      value={job.years}
+                      onChange={(e) => updateJob(i, 'years', e.target.value)}
+                      onWheel={preventWheelChange}
+                    />
+                    <span className="ss-job-text">yrs at $</span>
+                    <input
+                      type="number"
+                      className="ss-salary"
+                      min="0"
+                      step="1000"
+                      placeholder="0"
+                      value={job.salary}
+                      onChange={(e) => updateJob(i, 'salary', e.target.value)}
+                      onWheel={preventWheelChange}
+                    />
+                    <span className="ss-job-text">/yr</span>
+                    {ssJobs.length > 1 && (
+                      <button
+                        type="button"
+                        className="ss-remove"
+                        aria-label="Remove job"
+                        onClick={() => removeJob(i)}
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
+                ))}
+                <button type="button" className="ss-add" onClick={addJob}>
+                  ＋ Add another job
+                </button>
+
+                <div className="ss-row-2">
+                  <label className="field ss-inline">
+                    <span className="q">When will you claim?</span>
+                    <select value={ssClaimAge} onChange={(e) => setSsClaimAge(Number(e.target.value))}>
+                      <option value={62}>As early as I can (62)</option>
+                      <option value={67}>Full retirement age (67)</option>
+                      <option value={70}>As late as possible (70)</option>
+                    </select>
+                  </label>
+                  <label className="ss-couple">
+                    <input
+                      type="checkbox"
+                      checked={ssCouple}
+                      onChange={(e) => setSsCouple(e.target.checked)}
+                    />
+                    Planning as a couple
+                  </label>
+                </div>
+              </div>
+            )}
+
+            <div className="ss-result">
+              <span>{ssMode === 'known' ? 'Your Social Security' : 'Estimated Social Security'}</span>
+              <strong>{formatMoney(ssMonthly)}/mo</strong>
+            </div>
+            {ssMonthly > 0 && (
+              <p className="ss-note">
+                That covers {formatMoney(ssMonthly)} of your {formatMoney(monthlySpend)}/month, so
+                your investments only need to cover {formatMoney(coveredByInvestments)}/month.
+              </p>
+            )}
+          </div>
+        )}
       </section>
 
       <section className="explain">
@@ -397,7 +573,7 @@ export default function App() {
             </label>
             <p className="future-monthly-note">
               At {inflation}% inflation, your {formatMoney(monthlySpend)}/month becomes about{' '}
-              <strong>{formatMoney(futureMonthly)}/month</strong> by {retirementYear}.
+              <strong>{formatMoney(desiredFutureMonthly)}/month</strong> by {retirementYear}.
             </p>
           </div>
         )}

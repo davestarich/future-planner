@@ -86,6 +86,47 @@ export function withdrawalRateForYears(years) {
   return 4.0
 }
 
+// Estimate a monthly Social Security benefit (in today's dollars) from a
+// career-average income. Social Security replaces a bigger share of income for
+// lower earners (it's progressive), so we interpolate a replacement rate, cap
+// at the rough maximum benefit, adjust for the claim age, and add a spousal
+// bump for couples. A ballpark; the exact figure comes from ssa.gov.
+export function estimateSocialSecurity({ careerAvgIncome, claimAge, isCouple }) {
+  if (!careerAvgIncome || careerAvgIncome <= 0) return 0
+
+  // Share of income Social Security covers, by career-average income.
+  const anchors = [
+    [25000, 0.55],
+    [65000, 0.4],
+    [130000, 0.28],
+    [200000, 0.22],
+  ]
+  let rate = anchors[anchors.length - 1][1]
+  if (careerAvgIncome <= anchors[0][0]) rate = anchors[0][1]
+  else if (careerAvgIncome < anchors[anchors.length - 1][0]) {
+    for (let i = 0; i < anchors.length - 1; i++) {
+      const [x0, y0] = anchors[i]
+      const [x1, y1] = anchors[i + 1]
+      if (careerAvgIncome >= x0 && careerAvgIncome <= x1) {
+        rate = y0 + ((careerAvgIncome - x0) / (x1 - x0)) * (y1 - y0)
+        break
+      }
+    }
+  }
+
+  // Monthly benefit at full retirement age, capped at the rough maximum (~$3,800).
+  const monthlyAtFRA = Math.min((careerAvgIncome * rate) / 12, 3800)
+
+  // Claim-age adjustment relative to full retirement age (67).
+  const claimFactor = claimAge === 62 ? 0.7 : claimAge === 70 ? 1.24 : 1.0
+  let monthly = monthlyAtFRA * claimFactor
+
+  // Couples get a rough spousal boost.
+  if (isCouple) monthly *= 1.5
+
+  return Math.round(monthly)
+}
+
 // Short, friendly currency: $1.98M, $628K, $4,000.
 export function formatMoney(value) {
   if (!isFinite(value) || value <= 0) return '$0'
