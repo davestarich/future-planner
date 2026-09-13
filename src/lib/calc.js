@@ -60,6 +60,32 @@ export function computeOnTrack({
   return { projected, gap, ratio, status }
 }
 
+// Convert a retirement horizon (how many years the money must last) into a
+// safe withdrawal rate. Anchored to common planning guidance, then interpolated
+// so the rate moves smoothly as the horizon changes. Longer horizon = safer
+// (lower) rate = you need a bigger nest egg.
+export function withdrawalRateForYears(years) {
+  const anchors = [
+    [10, 6.0],
+    [20, 5.0],
+    [30, 4.0],
+    [40, 3.5],
+    [50, 3.25],
+  ]
+  if (years <= anchors[0][0]) return anchors[0][1]
+  const last = anchors[anchors.length - 1]
+  if (years >= last[0]) return last[1]
+  for (let i = 0; i < anchors.length - 1; i++) {
+    const [y0, r0] = anchors[i]
+    const [y1, r1] = anchors[i + 1]
+    if (years >= y0 && years <= y1) {
+      const t = (years - y0) / (y1 - y0)
+      return Math.round((r0 + t * (r1 - r0)) * 100) / 100
+    }
+  }
+  return 4.0
+}
+
 // Short, friendly currency: $1.98M, $628K, $4,000.
 export function formatMoney(value) {
   if (!isFinite(value) || value <= 0) return '$0'

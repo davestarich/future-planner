@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { computeProjection, computeOnTrack, formatMoney } from './lib/calc.js'
+import { computeProjection, computeOnTrack, withdrawalRateForYears, formatMoney } from './lib/calc.js'
 
 // In production the AI function is served from the same site (a relative URL).
 // In local dev (Vite on :5173) there's no function, so call the deployed one
@@ -41,7 +41,7 @@ export default function App() {
   // Assumptions (sensible defaults, adjustable by the user).
   const [inflation, setInflation] = useState(3)
   const [returnRate, setReturnRate] = useState(7)
-  const [withdrawal, setWithdrawal] = useState(4)
+  const [planToAge, setPlanToAge] = useState(95)
   const [showAssumptions, setShowAssumptions] = useState(false)
 
   // AI explanation feature.
@@ -51,6 +51,11 @@ export default function App() {
 
   const years = Math.max(0, retirementAge - currentAge)
   const retirementYear = new Date().getFullYear() + years
+
+  // The withdrawal rate is now derived from how long the money must last
+  // (plan-to age minus retirement age), so the user never sees the jargon.
+  const moneyMustLastYears = Math.max(1, planToAge - retirementAge)
+  const withdrawal = withdrawalRateForYears(moneyMustLastYears)
 
   // Number inputs normally change value when you scroll the mouse wheel over them,
   // which is annoying while scrolling the page. Blurring on wheel disables that.
@@ -83,7 +88,7 @@ export default function App() {
       const summary =
         `A person wants to spend $${monthlySpend} per month in retirement, in today's dollars. ` +
         `They are ${currentAge} now and plan to retire at ${retirementAge}, which is ${years} years away (the year ${retirementYear}). ` +
-        `Assuming ${inflation}% inflation, ${returnRate}% investment return, and a ${withdrawal}% withdrawal rate: ` +
+        `Assuming ${inflation}% inflation, ${returnRate}% investment return, and planning for the money to last until age ${planToAge} (about a ${withdrawal.toFixed(1)}% withdrawal rate): ` +
         `their retirement target is about ${formatMoney(targetToday)} in today's dollars (${formatMoney(targetNominal)} by ${retirementYear}), ` +
         `and to reach it without saving another dollar they'd need about ${formatMoney(neededToday)} invested today. ` +
         `They currently have ${formatMoney(currentAssets)} invested and add ${formatMoney(monthlyContribution)} per month, ` +
@@ -291,15 +296,22 @@ export default function App() {
               step={0.5}
               hint="Average yearly growth of your investments before inflation."
             />
-            <Slider
-              label="Withdrawal rate"
-              value={withdrawal}
-              setValue={setWithdrawal}
-              min={2.5}
-              max={6}
-              step={0.5}
-              hint="Share of your nest egg you spend each year. 4% is the common rule of thumb."
-            />
+            <label className="field">
+              <span className="q">Plan for your money to last until age</span>
+              <input
+                type="number"
+                min="70"
+                max="110"
+                value={planToAge}
+                onChange={(e) => setPlanToAge(Number(e.target.value))}
+                onWheel={preventWheelChange}
+              />
+              <small>
+                That works out to roughly a {withdrawal.toFixed(1)}% withdrawal rate over{' '}
+                {moneyMustLastYears} years of retirement. Planning to 90 to 95 is common, since
+                it's wise to plan past the average.
+              </small>
+            </label>
             <p className="future-monthly-note">
               At {inflation}% inflation, your {formatMoney(monthlySpend)}/month becomes about{' '}
               <strong>{formatMoney(futureMonthly)}/month</strong> by {retirementYear}.
