@@ -6,6 +6,8 @@ import {
   estimateSocialSecurity,
   formatMoney,
 } from './lib/calc.js'
+import { Analytics } from '@vercel/analytics/react'
+import { track } from '@vercel/analytics'
 
 // In production the AI function is served from the same site (a relative URL).
 // In local dev (Vite on :5173) there's no function, so call the deployed one
@@ -58,6 +60,15 @@ export default function App() {
   const [ssClaimAge, setSsClaimAge] = useState(67)
   const [ssCouple, setSsCouple] = useState(false)
 
+  // Analytics: fire each named event at most once per session, so the numbers
+  // reflect "how many visitors engaged with X," not raw click spam.
+  const firedEvents = useRef(new Set())
+  const trackOnce = (name) => {
+    if (firedEvents.current.has(name)) return
+    firedEvents.current.add(name)
+    track(name)
+  }
+
   // AI explanation feature.
   const [explanation, setExplanation] = useState('')
   const [loadingExplain, setLoadingExplain] = useState(false)
@@ -96,6 +107,16 @@ export default function App() {
         /* silent fallback: keep the 3% default */
       })
   }, [])
+
+  // Fire once when the user first edits a core input (playground engagement).
+  const firstRender = useRef(true)
+  useEffect(() => {
+    if (firstRender.current) {
+      firstRender.current = false
+      return
+    }
+    trackOnce('scenario_changed')
+  }, [monthlySpend, currentAge, retirementAge])
 
   const years = Math.max(0, retirementAge - currentAge)
   const retirementYear = new Date().getFullYear() + years
@@ -150,6 +171,7 @@ export default function App() {
   // Send the current numbers to our serverless function, which asks Claude to
   // explain them in plain English, then show the result.
   async function explainResults() {
+    track('explain_clicked')
     setLoadingExplain(true)
     setExplainError('')
     setExplanation('')
@@ -303,7 +325,13 @@ export default function App() {
       </section>
 
       <section className="ss">
-        <button className="accordion-toggle" onClick={() => setShowSS((v) => !v)}>
+        <button
+          className="accordion-toggle"
+          onClick={() => {
+            if (!showSS) trackOnce('social_security_opened')
+            setShowSS((v) => !v)
+          }}
+        >
           {showSS ? 'Hide Social Security' : 'Include Social Security (optional)'}
           {!showSS && ssMonthly > 0 && (
             <span className="ss-badge">covers {formatMoney(ssMonthly)}/mo</span>
@@ -453,7 +481,13 @@ export default function App() {
       </section>
 
       <section className="ontrack">
-        <button className="accordion-toggle" onClick={() => setShowOnTrack((v) => !v)}>
+        <button
+          className="accordion-toggle"
+          onClick={() => {
+            if (!showOnTrack) trackOnce('ontrack_opened')
+            setShowOnTrack((v) => !v)
+          }}
+        >
           {showOnTrack ? 'Hide the on-track check' : 'Am I on track?'}
           <span className="chev">{showOnTrack ? '▲' : '▼'}</span>
         </button>
@@ -519,7 +553,13 @@ export default function App() {
       </section>
 
       <section className="assumptions">
-        <button className="accordion-toggle" onClick={() => setShowAssumptions((v) => !v)}>
+        <button
+          className="accordion-toggle"
+          onClick={() => {
+            if (!showAssumptions) trackOnce('assumptions_opened')
+            setShowAssumptions((v) => !v)
+          }}
+        >
           {showAssumptions ? 'Hide' : 'Adjust'} the assumptions
           <span className="chev">{showAssumptions ? '▲' : '▼'}</span>
         </button>
@@ -584,6 +624,7 @@ export default function App() {
         assumptions above, which you can change.
       </footer>
     </div>
+      <Analytics />
     </>
   )
 }
