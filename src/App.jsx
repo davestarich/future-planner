@@ -1,11 +1,37 @@
 import { useState } from 'react'
-import { computeProjection, formatMoney } from './lib/calc.js'
+import { computeProjection, computeOnTrack, formatMoney } from './lib/calc.js'
+
+// How each on-track outcome is shown. `message` takes the gap (already formatted).
+const STATUS_DISPLAY = {
+  'on-track': {
+    emoji: '🟢',
+    word: 'On track',
+    message: (gap) => `You're on pace to reach your target with about ${gap} to spare. Nicely done.`,
+  },
+  close: {
+    emoji: '🟡',
+    word: 'Close',
+    message: (gap) =>
+      `You're close: about ${gap} short of your target. A small bump in monthly savings likely closes the gap.`,
+  },
+  shortfall: {
+    emoji: '🔴',
+    word: 'Shortfall',
+    message: (gap) =>
+      `You're on pace for a shortfall of about ${gap}. Try raising your monthly contribution or retiring a little later, and watch the gap shrink.`,
+  },
+}
 
 export default function App() {
   // Step 1 inputs (the only things the user has to give us up front).
   const [monthlySpend, setMonthlySpend] = useState(4000)
   const [currentAge, setCurrentAge] = useState(48)
   const [retirementAge, setRetirementAge] = useState(65)
+
+  // Step 2 inputs (the "am I on track?" check).
+  const [currentAssets, setCurrentAssets] = useState(350000)
+  const [monthlyContribution, setMonthlyContribution] = useState(2500)
+  const [showOnTrack, setShowOnTrack] = useState(false)
 
   // Assumptions (sensible defaults, adjustable by the user).
   const [inflation, setInflation] = useState(3)
@@ -27,6 +53,15 @@ export default function App() {
     returnPct: returnRate,
     withdrawalPct: withdrawal,
   })
+
+  const onTrack = computeOnTrack({
+    currentAssets,
+    monthlyContribution,
+    yearsToRetirement: years,
+    returnPct: returnRate,
+    targetNominal,
+  })
+  const status = STATUS_DISPLAY[onTrack.status]
 
   return (
     <div className="page">
@@ -105,8 +140,74 @@ export default function App() {
         </div>
       </section>
 
+      <section className="ontrack">
+        <button className="accordion-toggle" onClick={() => setShowOnTrack((v) => !v)}>
+          {showOnTrack ? 'Hide the on-track check' : 'Am I on track?'}
+          <span className="chev">{showOnTrack ? '▲' : '▼'}</span>
+        </button>
+        {showOnTrack && (
+          <div className="card ontrack-body">
+            <p className="ontrack-intro">
+              Add what you have and what you're saving, and we'll project whether you'll hit your
+              target by {retirementYear}.
+            </p>
+
+            <label className="field">
+              <span className="q">What do you have invested today?</span>
+              <small>401k, IRA, brokerage, and cash savings. Not your home.</small>
+              <div className="money-input">
+                <span className="prefix">$</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="1000"
+                  value={currentAssets}
+                  onChange={(e) => setCurrentAssets(Number(e.target.value))}
+                  onWheel={preventWheelChange}
+                />
+              </div>
+            </label>
+
+            <label className="field">
+              <span className="q">How much do you add each month?</span>
+              <small>Your contributions plus any employer match.</small>
+              <div className="money-input">
+                <span className="prefix">$</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="50"
+                  value={monthlyContribution}
+                  onChange={(e) => setMonthlyContribution(Number(e.target.value))}
+                  onWheel={preventWheelChange}
+                />
+                <span className="suffix">/ month</span>
+              </div>
+            </label>
+
+            <div className={`status-card status-${onTrack.status}`}>
+              <div className="status-badge">
+                <span className="status-emoji">{status.emoji}</span>
+                <span className="status-word">{status.word}</span>
+              </div>
+              <div className="status-compare">
+                <div className="status-row">
+                  <span className="k">Projected by {retirementYear}</span>
+                  <span className="v">{formatMoney(onTrack.projected)}</span>
+                </div>
+                <div className="status-row">
+                  <span className="k">Your target</span>
+                  <span className="v">{formatMoney(targetNominal)}</span>
+                </div>
+              </div>
+              <p className="status-message">{status.message(formatMoney(Math.abs(onTrack.gap)))}</p>
+            </div>
+          </div>
+        )}
+      </section>
+
       <section className="assumptions">
-        <button className="assumptions-toggle" onClick={() => setShowAssumptions((v) => !v)}>
+        <button className="accordion-toggle" onClick={() => setShowAssumptions((v) => !v)}>
           {showAssumptions ? 'Hide' : 'Adjust'} the assumptions
           <span className="chev">{showAssumptions ? '▲' : '▼'}</span>
         </button>

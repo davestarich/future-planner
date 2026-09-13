@@ -185,7 +185,7 @@ input[type='number']:focus {
 .assumptions {
   margin-top: 8px;
 }
-.assumptions-toggle {
+.accordion-toggle {
   width: 100%;
   display: flex;
   justify-content: center;
@@ -234,6 +234,70 @@ input[type='number']:focus {
   border-top: 1px solid var(--line);
   font-size: 14px;
   color: var(--ink);
+}
+
+.ontrack {
+  margin-top: 8px;
+}
+.ontrack-body {
+  margin-top: 10px;
+  display: grid;
+  gap: 18px;
+}
+.ontrack-intro {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.status-card {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 18px;
+}
+.status-on-track {
+  border-color: #37b26e;
+  background: rgba(55, 178, 110, 0.1);
+}
+.status-close {
+  border-color: #d9a520;
+  background: rgba(217, 165, 32, 0.12);
+}
+.status-shortfall {
+  border-color: #e0574f;
+  background: rgba(224, 87, 79, 0.1);
+}
+.status-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 800;
+  font-size: 20px;
+}
+.status-emoji {
+  font-size: 18px;
+}
+.status-compare {
+  margin-top: 14px;
+  display: grid;
+  gap: 6px;
+}
+.status-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 15px;
+}
+.status-row .k {
+  color: var(--muted);
+}
+.status-row .v {
+  font-weight: 700;
+}
+.status-message {
+  margin: 14px 0 0;
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 .disclaimer {
