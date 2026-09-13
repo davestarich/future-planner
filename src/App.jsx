@@ -16,6 +16,10 @@ export default function App() {
   const years = Math.max(0, retirementAge - currentAge)
   const retirementYear = new Date().getFullYear() + years
 
+  // Number inputs normally change value when you scroll the mouse wheel over them,
+  // which is annoying while scrolling the page. Blurring on wheel disables that.
+  const preventWheelChange = (e) => e.currentTarget.blur()
+
   const { futureMonthly, targetNominal, targetToday, neededToday } = computeProjection({
     monthlySpendToday: monthlySpend,
     yearsToRetirement: years,
@@ -43,6 +47,7 @@ export default function App() {
               step="100"
               value={monthlySpend}
               onChange={(e) => setMonthlySpend(Number(e.target.value))}
+              onWheel={preventWheelChange}
             />
             <span className="suffix">/ month</span>
           </div>
@@ -57,6 +62,7 @@ export default function App() {
               max="90"
               value={currentAge}
               onChange={(e) => setCurrentAge(Number(e.target.value))}
+              onWheel={preventWheelChange}
             />
           </label>
           <label className="field">
@@ -67,6 +73,7 @@ export default function App() {
               max="90"
               value={retirementAge}
               onChange={(e) => setRetirementAge(Number(e.target.value))}
+              onWheel={preventWheelChange}
             />
           </label>
         </div>
