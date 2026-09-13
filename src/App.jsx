@@ -297,7 +297,15 @@ export default function App() {
               hint="Average yearly growth of your investments before inflation."
             />
             <label className="field">
-              <span className="q">Plan for your money to last until age</span>
+              <span className="q">
+                Plan for your money to last until age
+                <InfoTip>
+                  Life expectancy at birth (about 76 for men) is the wrong number to plan with.
+                  Someone who has already reached 65 is expected to live to about 84 (men) or 86 to
+                  87 (women), and that's an average, so half live longer. Plan to about 90 to 95 so
+                  you don't risk outliving your money.
+                </InfoTip>
+              </span>
               <input
                 type="number"
                 min="70"
@@ -346,5 +354,33 @@ function Slider({ label, value, setValue, min, max, step, hint }) {
       />
       <small>{hint}</small>
     </label>
+  )
+}
+
+// A small "i" button that toggles an explanatory tooltip. Click/tap to open,
+// so it works on touch devices too (not just hover).
+function InfoTip({ children }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <span className="infotip">
+      <button
+        type="button"
+        className="infotip-btn"
+        aria-label="More information"
+        aria-expanded={open}
+        onClick={(e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          setOpen((v) => !v)
+        }}
+      >
+        i
+      </button>
+      {open && (
+        <span className="infotip-bubble" role="tooltip">
+          {children}
+        </span>
+      )}
+    </span>
   )
 }
