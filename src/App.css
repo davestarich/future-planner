@@ -336,6 +336,79 @@ input[type='number']:focus {
   text-align: center;
 }
 
+.sticky-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background: var(--card);
+  border-bottom: 1px solid var(--line);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.14);
+}
+.sticky-inner {
+  max-width: 620px;
+  margin: 0 auto;
+  padding: 9px 18px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.sticky-field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.sticky-field input[type='number'] {
+  width: 72px;
+  padding: 6px 8px;
+  font-size: 14px;
+  border-radius: 8px;
+}
+.sticky-money {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.sticky-money input[type='number'] {
+  width: 76px;
+}
+.sticky-prefix,
+.sticky-unit {
+  color: var(--muted);
+}
+.sticky-result {
+  margin-left: auto;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  white-space: nowrap;
+}
+.sticky-result-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+.sticky-result strong {
+  font-size: 17px;
+  color: var(--brand-deep);
+}
+@media (max-width: 520px) {
+  .sticky-inner {
+    gap: 10px;
+    padding: 8px 12px;
+  }
+  .sticky-field > span:first-child,
+  .sticky-result-label {
+    display: none;
+  }
+}
+
 .infotip {
   position: relative;
   display: inline-flex;

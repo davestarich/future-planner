@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { computeProjection, computeOnTrack, withdrawalRateForYears, formatMoney } from './lib/calc.js'
 
 // In production the AI function is served from the same site (a relative URL).
@@ -48,6 +48,21 @@ export default function App() {
   const [explanation, setExplanation] = useState('')
   const [loadingExplain, setLoadingExplain] = useState(false)
   const [explainError, setExplainError] = useState('')
+
+  // Sticky bar: watch the main inputs, and show the compact bar once they
+  // scroll out of view so the user can keep tweaking without scrolling up.
+  const inputsRef = useRef(null)
+  const [showSticky, setShowSticky] = useState(false)
+  useEffect(() => {
+    const el = inputsRef.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => setShowSticky(!entry.isIntersecting),
+      { threshold: 0 },
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
 
   const years = Math.max(0, retirementAge - currentAge)
   const retirementYear = new Date().getFullYear() + years
@@ -111,13 +126,50 @@ export default function App() {
   }
 
   return (
-    <div className="page">
+    <>
+      {showSticky && (
+        <div className="sticky-bar">
+          <div className="sticky-inner">
+            <label className="sticky-field">
+              <span>Spend</span>
+              <span className="sticky-money">
+                <span className="sticky-prefix">$</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="100"
+                  value={monthlySpend}
+                  onChange={(e) => setMonthlySpend(Number(e.target.value))}
+                  onWheel={preventWheelChange}
+                />
+              </span>
+              <span className="sticky-unit">/mo</span>
+            </label>
+            <label className="sticky-field">
+              <span>Retire at</span>
+              <input
+                type="number"
+                min="30"
+                max="90"
+                value={retirementAge}
+                onChange={(e) => setRetirementAge(Number(e.target.value))}
+                onWheel={preventWheelChange}
+              />
+            </label>
+            <div className="sticky-result">
+              <span className="sticky-result-label">Target</span>
+              <strong>{formatMoney(targetToday)}</strong>
+            </div>
+          </div>
+        </div>
+      )}
+      <div className="page">
       <header className="hero">
         <h1>Future Planner</h1>
         <p className="tagline">The 5-minute retirement reality check</p>
       </header>
 
-      <section className="card inputs">
+      <section className="card inputs" ref={inputsRef}>
         <label className="field">
           <span className="q">How much do you want to spend each month in retirement?</span>
           <small>In today's dollars: what you'd want to live on if it were now.</small>
@@ -333,6 +385,7 @@ export default function App() {
         assumptions above, which you can change.
       </footer>
     </div>
+    </>
   )
 }
 
