@@ -83,6 +83,7 @@ A financially engaged but non-expert adult (30s to 50s) who wants a quick, hones
 - **API #2, real economic data:** FRED API grounds inflation and return assumptions in actual historical data.
 - **Reframe the withdrawal-rate input in plain language:** "withdrawal rate" is jargon (it caused real confusion in testing). The rate is mostly a proxy for how long the money must last, so replace the slider with a human question like "Plan for your money to last until age ___" (default ~90) and derive the withdrawal rate behind the scenes (years-to-last maps to a safe rate via a small lookup: ~20yr to 5%, ~30yr to 4%, ~40yr+ to 3.25-3.5%). We already collect retirement age, so `plan-to age minus retirement age` gives the horizon. Directly serves the "plain language over jargon" principle.
 - **Life-expectancy guidance:** help users pick a sensible "plan-to" age. Note the key nuance: life expectancy *at birth* (~76 for men) is the wrong number; someone who has already reached 65 is expected to live to ~84 (women ~86-87), and because that is an average, plan past it (to ~90-95) to avoid outliving the money.
+- **Sticky condensed inputs:** as the user scrolls down to the Step 2 on-track results, keep a compact bar of the key inputs (monthly spend + retirement age) pinned to the top of the screen. They can tweak those values and watch the target and the on-track status update in real time, without scrolling back up. Turns the page into a live "what-if" playground and reinforces the cause-and-effect feel.
 
 ## 9. Success metrics
 
