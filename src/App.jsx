@@ -324,6 +324,96 @@ export default function App() {
         </div>
       </section>
 
+      <section className="explain">
+        <button className="explain-btn" onClick={explainResults} disabled={loadingExplain}>
+          {loadingExplain ? 'Thinking…' : '✨ Explain what this means for me'}
+        </button>
+        {explainError && <p className="explain-error">{explainError}</p>}
+        {explanation && (
+          <div className="card explain-output">
+            {explanation
+              .split('\n')
+              .map((p) => p.trim())
+              .filter(Boolean)
+              .map((para, i) => (
+                <p key={i}>{para}</p>
+              ))}
+          </div>
+        )}
+      </section>
+
+      <section className="ontrack">
+        <button
+          className="accordion-toggle"
+          onClick={() => {
+            if (!showOnTrack) trackOnce('ontrack_opened')
+            setShowOnTrack((v) => !v)
+          }}
+        >
+          {showOnTrack ? 'Hide the on-track check' : 'Am I on track?'}
+          <span className="chev">{showOnTrack ? '▲' : '▼'}</span>
+        </button>
+        {showOnTrack && (
+          <div className="card ontrack-body">
+            <p className="ontrack-intro">
+              Add what you have and what you're saving, and we'll project whether you'll hit your
+              target by {retirementYear}.
+            </p>
+
+            <label className="field">
+              <span className="q">What do you have invested today?</span>
+              <small>401k, IRA, brokerage, and cash savings. Not your home.</small>
+              <div className="money-input">
+                <span className="prefix">$</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="1000"
+                  value={currentAssets}
+                  onChange={(e) => setCurrentAssets(Number(e.target.value))}
+                  onWheel={preventWheelChange}
+                />
+              </div>
+            </label>
+
+            <label className="field">
+              <span className="q">How much do you add each month?</span>
+              <small>Your contributions plus any employer match.</small>
+              <div className="money-input">
+                <span className="prefix">$</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="50"
+                  value={monthlyContribution}
+                  onChange={(e) => setMonthlyContribution(Number(e.target.value))}
+                  onWheel={preventWheelChange}
+                />
+                <span className="suffix">/ month</span>
+              </div>
+            </label>
+
+            <div className={`status-card status-${onTrack.status}`}>
+              <div className="status-badge">
+                <span className="status-emoji">{status.emoji}</span>
+                <span className="status-word">{status.word}</span>
+              </div>
+              <div className="status-compare">
+                <div className="status-row">
+                  <span className="k">Projected by {retirementYear}</span>
+                  <span className="v">{formatMoney(onTrack.projected)}</span>
+                </div>
+                <div className="status-row">
+                  <span className="k">Your target</span>
+                  <span className="v">{formatMoney(targetNominal)}</span>
+                </div>
+              </div>
+              <p className="status-message">{status.message(formatMoney(Math.abs(onTrack.gap)))}</p>
+            </div>
+          </div>
+        )}
+      </section>
+
       <section className="ss">
         <button
           className="accordion-toggle"
@@ -462,96 +552,6 @@ export default function App() {
         )}
       </section>
 
-      <section className="explain">
-        <button className="explain-btn" onClick={explainResults} disabled={loadingExplain}>
-          {loadingExplain ? 'Thinking…' : '✨ Explain what this means for me'}
-        </button>
-        {explainError && <p className="explain-error">{explainError}</p>}
-        {explanation && (
-          <div className="card explain-output">
-            {explanation
-              .split('\n')
-              .map((p) => p.trim())
-              .filter(Boolean)
-              .map((para, i) => (
-                <p key={i}>{para}</p>
-              ))}
-          </div>
-        )}
-      </section>
-
-      <section className="ontrack">
-        <button
-          className="accordion-toggle"
-          onClick={() => {
-            if (!showOnTrack) trackOnce('ontrack_opened')
-            setShowOnTrack((v) => !v)
-          }}
-        >
-          {showOnTrack ? 'Hide the on-track check' : 'Am I on track?'}
-          <span className="chev">{showOnTrack ? '▲' : '▼'}</span>
-        </button>
-        {showOnTrack && (
-          <div className="card ontrack-body">
-            <p className="ontrack-intro">
-              Add what you have and what you're saving, and we'll project whether you'll hit your
-              target by {retirementYear}.
-            </p>
-
-            <label className="field">
-              <span className="q">What do you have invested today?</span>
-              <small>401k, IRA, brokerage, and cash savings. Not your home.</small>
-              <div className="money-input">
-                <span className="prefix">$</span>
-                <input
-                  type="number"
-                  min="0"
-                  step="1000"
-                  value={currentAssets}
-                  onChange={(e) => setCurrentAssets(Number(e.target.value))}
-                  onWheel={preventWheelChange}
-                />
-              </div>
-            </label>
-
-            <label className="field">
-              <span className="q">How much do you add each month?</span>
-              <small>Your contributions plus any employer match.</small>
-              <div className="money-input">
-                <span className="prefix">$</span>
-                <input
-                  type="number"
-                  min="0"
-                  step="50"
-                  value={monthlyContribution}
-                  onChange={(e) => setMonthlyContribution(Number(e.target.value))}
-                  onWheel={preventWheelChange}
-                />
-                <span className="suffix">/ month</span>
-              </div>
-            </label>
-
-            <div className={`status-card status-${onTrack.status}`}>
-              <div className="status-badge">
-                <span className="status-emoji">{status.emoji}</span>
-                <span className="status-word">{status.word}</span>
-              </div>
-              <div className="status-compare">
-                <div className="status-row">
-                  <span className="k">Projected by {retirementYear}</span>
-                  <span className="v">{formatMoney(onTrack.projected)}</span>
-                </div>
-                <div className="status-row">
-                  <span className="k">Your target</span>
-                  <span className="v">{formatMoney(targetNominal)}</span>
-                </div>
-              </div>
-              <p className="status-message">{status.message(formatMoney(Math.abs(onTrack.gap)))}</p>
-            </div>
-          </div>
-        )}
-      </section>
-
       <section className="assumptions">
         <button
           className="accordion-toggle"
@@ -654,8 +654,18 @@ function Slider({ label, value, setValue, min, max, step, hint }) {
 // so it works on touch devices too (not just hover).
 function InfoTip({ children }) {
   const [open, setOpen] = useState(false)
+  const ref = useRef(null)
+  // Close the tooltip when the user clicks anywhere outside it.
+  useEffect(() => {
+    if (!open) return
+    const onDocClick = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false)
+    }
+    document.addEventListener('mousedown', onDocClick)
+    return () => document.removeEventListener('mousedown', onDocClick)
+  }, [open])
   return (
-    <span className="infotip">
+    <span className="infotip" ref={ref}>
       <button
         type="button"
         className="infotip-btn"
