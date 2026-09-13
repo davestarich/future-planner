@@ -1,6 +1,11 @@
 import { useState } from 'react'
 import { computeProjection, computeOnTrack, formatMoney } from './lib/calc.js'
 
+// In production the AI function is served from the same site (a relative URL).
+// In local dev (Vite on :5173) there's no function, so call the deployed one
+// instead, which means the button works even while developing locally.
+const API_BASE = import.meta.env.PROD ? '' : 'https://future-planner-nine.vercel.app'
+
 // How each on-track outcome is shown. `message` takes the gap (already formatted).
 const STATUS_DISPLAY = {
   'on-track': {
@@ -39,6 +44,11 @@ export default function App() {
   const [withdrawal, setWithdrawal] = useState(4)
   const [showAssumptions, setShowAssumptions] = useState(false)
 
+  // AI explanation feature.
+  const [explanation, setExplanation] = useState('')
+  const [loadingExplain, setLoadingExplain] = useState(false)
+  const [explainError, setExplainError] = useState('')
+
   const years = Math.max(0, retirementAge - currentAge)
   const retirementYear = new Date().getFullYear() + years
 
@@ -62,6 +72,38 @@ export default function App() {
     targetNominal,
   })
   const status = STATUS_DISPLAY[onTrack.status]
+
+  // Send the current numbers to our serverless function, which asks Claude to
+  // explain them in plain English, then show the result.
+  async function explainResults() {
+    setLoadingExplain(true)
+    setExplainError('')
+    setExplanation('')
+    try {
+      const summary =
+        `A person wants to spend $${monthlySpend} per month in retirement, in today's dollars. ` +
+        `They are ${currentAge} now and plan to retire at ${retirementAge}, which is ${years} years away (the year ${retirementYear}). ` +
+        `Assuming ${inflation}% inflation, ${returnRate}% investment return, and a ${withdrawal}% withdrawal rate: ` +
+        `their retirement target is about ${formatMoney(targetToday)} in today's dollars (${formatMoney(targetNominal)} by ${retirementYear}), ` +
+        `and to reach it without saving another dollar they'd need about ${formatMoney(neededToday)} invested today. ` +
+        `They currently have ${formatMoney(currentAssets)} invested and add ${formatMoney(monthlyContribution)} per month, ` +
+        `which is projected to grow to ${formatMoney(onTrack.projected)} by ${retirementYear} versus their ${formatMoney(targetNominal)} target, ` +
+        `so they are currently "${onTrack.status}".`
+
+      const res = await fetch(`${API_BASE}/api/explain`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ summary }),
+      })
+      if (!res.ok) throw new Error('Request failed')
+      const data = await res.json()
+      setExplanation(data.explanation || '')
+    } catch (e) {
+      setExplainError("Sorry, couldn't generate an explanation right now. Please try again in a moment.")
+    } finally {
+      setLoadingExplain(false)
+    }
+  }
 
   return (
     <div className="page">
@@ -138,6 +180,24 @@ export default function App() {
             year.
           </p>
         </div>
+      </section>
+
+      <section className="explain">
+        <button className="explain-btn" onClick={explainResults} disabled={loadingExplain}>
+          {loadingExplain ? 'Thinking…' : '✨ Explain what this means for me'}
+        </button>
+        {explainError && <p className="explain-error">{explainError}</p>}
+        {explanation && (
+          <div className="card explain-output">
+            {explanation
+              .split('\n')
+              .map((p) => p.trim())
+              .filter(Boolean)
+              .map((para, i) => (
+                <p key={i}>{para}</p>
+              ))}
+          </div>
+        )}
       </section>
 
       <section className="ontrack">

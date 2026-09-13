@@ -300,6 +300,42 @@ input[type='number']:focus {
   line-height: 1.5;
 }
 
+.explain {
+  margin: 20px 0 8px;
+  display: grid;
+  gap: 14px;
+}
+.explain-btn {
+  width: 100%;
+  padding: 14px 18px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  background: linear-gradient(135deg, var(--brand), var(--brand-deep));
+  box-shadow: var(--shadow);
+}
+.explain-btn:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+.explain-output p {
+  margin: 0 0 12px;
+  font-size: 15px;
+  line-height: 1.6;
+}
+.explain-output p:last-child {
+  margin-bottom: 0;
+}
+.explain-error {
+  margin: 0;
+  font-size: 14px;
+  color: #e0574f;
+  text-align: center;
+}
+
 .disclaimer {
   margin-top: 28px;
   text-align: center;
