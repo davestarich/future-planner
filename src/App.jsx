@@ -250,8 +250,7 @@ export default function App() {
       )}
       <div className="page">
       <header className="hero">
-        <h1>Future Planner</h1>
-        <p className="tagline">The 5-minute retirement reality check</p>
+        <h1>The 5-minute retirement reality check</h1>
       </header>
 
       <section className="card inputs" ref={inputsRef}>
@@ -342,19 +341,19 @@ export default function App() {
         )}
       </section>
 
-      <section className="ontrack">
+      <section className="accordion">
         <button
-          className="accordion-toggle"
+          className="accordion-header"
           onClick={() => {
             if (!showOnTrack) trackOnce('ontrack_opened')
             setShowOnTrack((v) => !v)
           }}
         >
-          {showOnTrack ? 'Hide the on-track check' : 'Am I on track?'}
+          <span>{showOnTrack ? 'Hide the on-track check' : 'Am I on track?'}</span>
           <span className="chev">{showOnTrack ? '▲' : '▼'}</span>
         </button>
         {showOnTrack && (
-          <div className="card ontrack-body">
+          <div className="accordion-body ontrack-body">
             <p className="ontrack-intro">
               Add what you have and what you're saving, and we'll project whether you'll hit your
               target by {retirementYear}.
@@ -414,22 +413,24 @@ export default function App() {
         )}
       </section>
 
-      <section className="ss">
+      <section className="accordion">
         <button
-          className="accordion-toggle"
+          className="accordion-header"
           onClick={() => {
             if (!showSS) trackOnce('social_security_opened')
             setShowSS((v) => !v)
           }}
         >
-          {showSS ? 'Hide Social Security' : 'Include Social Security (optional)'}
-          {!showSS && ssMonthly > 0 && (
-            <span className="ss-badge">covers {formatMoney(ssMonthly)}/mo</span>
-          )}
+          <span>
+            {showSS ? 'Hide Social Security' : 'Include Social Security (optional)'}
+            {!showSS && ssMonthly > 0 && (
+              <span className="ss-badge">covers {formatMoney(ssMonthly)}/mo</span>
+            )}
+          </span>
           <span className="chev">{showSS ? '▲' : '▼'}</span>
         </button>
         {showSS && (
-          <div className="card ss-body">
+          <div className="accordion-body ss-body">
             <p className="ss-intro">
               Social Security can cover a big slice of your retirement income, which shrinks the
               nest egg you need.
@@ -552,19 +553,19 @@ export default function App() {
         )}
       </section>
 
-      <section className="assumptions">
+      <section className="accordion">
         <button
-          className="accordion-toggle"
+          className="accordion-header"
           onClick={() => {
             if (!showAssumptions) trackOnce('assumptions_opened')
             setShowAssumptions((v) => !v)
           }}
         >
-          {showAssumptions ? 'Hide' : 'Adjust'} the assumptions
+          <span>{showAssumptions ? 'Hide' : 'Adjust'} the assumptions</span>
           <span className="chev">{showAssumptions ? '▲' : '▼'}</span>
         </button>
         {showAssumptions && (
-          <div className="card sliders">
+          <div className="accordion-body sliders">
             <Slider
               label="Inflation"
               value={inflation}

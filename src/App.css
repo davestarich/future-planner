@@ -58,7 +58,7 @@ textarea {
 }
 .hero h1 {
   margin: 0;
-  font-size: 34px;
+  font-size: 28px;
   letter-spacing: -0.02em;
 }
 .tagline {
@@ -195,10 +195,17 @@ input[type='number']:focus {
 .assumptions {
   margin-top: 8px;
 }
-.accordion-toggle {
+.accordion {
+  margin-top: 14px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+}
+.accordion-header {
   width: 100%;
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
   gap: 8px;
   background: none;
@@ -207,13 +214,16 @@ input[type='number']:focus {
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
-  padding: 10px;
+  padding: 16px 20px;
+  text-align: left;
+}
+.accordion-body {
+  padding: 0 20px 20px;
 }
 .chev {
   font-size: 11px;
 }
 .sliders {
-  margin-top: 10px;
   display: grid;
   gap: 20px;
 }
@@ -250,7 +260,6 @@ input[type='number']:focus {
   margin-top: 8px;
 }
 .ontrack-body {
-  margin-top: 10px;
   display: grid;
   gap: 18px;
 }
@@ -468,7 +477,6 @@ input[type='number']:focus {
   color: var(--muted);
 }
 .ss-body {
-  margin-top: 10px;
   display: grid;
   gap: 16px;
 }
