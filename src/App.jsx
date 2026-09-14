@@ -36,20 +36,21 @@ const STATUS_DISPLAY = {
 }
 
 export default function App() {
-  // Step 1 inputs (the only things the user has to give us up front).
-  const [monthlySpend, setMonthlySpend] = useState(4000)
-  const [currentAge, setCurrentAge] = useState(48)
-  const [retirementAge, setRetirementAge] = useState(65)
+  // Step 1 inputs. Stored as strings so the fields can be cleared and edited
+  // freely (numbers are parsed out below); avoids the stuck-leading-zero bug.
+  const [monthlySpend, setMonthlySpend] = useState('4000')
+  const [currentAge, setCurrentAge] = useState('48')
+  const [retirementAge, setRetirementAge] = useState('65')
 
   // Step 2 inputs (the "am I on track?" check).
-  const [currentAssets, setCurrentAssets] = useState(350000)
-  const [monthlyContribution, setMonthlyContribution] = useState(2500)
+  const [currentAssets, setCurrentAssets] = useState('350000')
+  const [monthlyContribution, setMonthlyContribution] = useState('2500')
   const [showOnTrack, setShowOnTrack] = useState(false)
 
   // Assumptions (sensible defaults, adjustable by the user).
   const [inflation, setInflation] = useState(3)
   const [returnRate, setReturnRate] = useState(7)
-  const [planToAge, setPlanToAge] = useState(95)
+  const [planToAge, setPlanToAge] = useState('95')
   const [showAssumptions, setShowAssumptions] = useState(false)
 
   // Social Security (optional): reduces the spend investments must cover.
@@ -118,12 +119,20 @@ export default function App() {
     trackOnce('scenario_changed')
   }, [monthlySpend, currentAge, retirementAge])
 
-  const years = Math.max(0, retirementAge - currentAge)
+  // Parse the string inputs into numbers for the math (empty becomes 0).
+  const monthlySpendNum = Number(monthlySpend) || 0
+  const currentAgeNum = Number(currentAge) || 0
+  const retirementAgeNum = Number(retirementAge) || 0
+  const planToAgeNum = Number(planToAge) || 0
+  const currentAssetsNum = Number(currentAssets) || 0
+  const monthlyContributionNum = Number(monthlyContribution) || 0
+
+  const years = Math.max(0, retirementAgeNum - currentAgeNum)
   const retirementYear = new Date().getFullYear() + years
 
   // The withdrawal rate is now derived from how long the money must last
   // (plan-to age minus retirement age), so the user never sees the jargon.
-  const moneyMustLastYears = Math.max(1, planToAge - retirementAge)
+  const moneyMustLastYears = Math.max(1, planToAgeNum - retirementAgeNum)
   const withdrawal = withdrawalRateForYears(moneyMustLastYears)
 
   // Social Security: weighted-average career income from the entered jobs, then
@@ -141,11 +150,11 @@ export default function App() {
     isCouple: ssCouple,
   })
   const ssMonthly = ssMode === 'known' ? Number(ssKnown) || 0 : ssEstimated
-  const coveredByInvestments = Math.max(0, monthlySpend - ssMonthly)
+  const coveredByInvestments = Math.max(0, monthlySpendNum - ssMonthly)
 
   // What the desired spend (not the invested portion) grows to with inflation,
   // used only for the illustrative note in the assumptions panel.
-  const desiredFutureMonthly = monthlySpend * Math.pow(1 + inflation / 100, years)
+  const desiredFutureMonthly = monthlySpendNum * Math.pow(1 + inflation / 100, years)
 
   // Number inputs normally change value when you scroll the mouse wheel over them,
   // which is annoying while scrolling the page. Blurring on wheel disables that.
@@ -160,8 +169,8 @@ export default function App() {
   })
 
   const onTrack = computeOnTrack({
-    currentAssets,
-    monthlyContribution,
+    currentAssets: currentAssetsNum,
+    monthlyContribution: monthlyContributionNum,
     yearsToRetirement: years,
     returnPct: returnRate,
     targetNominal,
@@ -224,7 +233,7 @@ export default function App() {
                   min="0"
                   step="100"
                   value={monthlySpend}
-                  onChange={(e) => setMonthlySpend(Number(e.target.value))}
+                  onChange={(e) => setMonthlySpend(e.target.value)}
                   onWheel={preventWheelChange}
                 />
               </span>
@@ -237,7 +246,7 @@ export default function App() {
                 min="30"
                 max="90"
                 value={retirementAge}
-                onChange={(e) => setRetirementAge(Number(e.target.value))}
+                onChange={(e) => setRetirementAge(e.target.value)}
                 onWheel={preventWheelChange}
               />
             </label>
@@ -264,7 +273,7 @@ export default function App() {
               min="0"
               step="100"
               value={monthlySpend}
-              onChange={(e) => setMonthlySpend(Number(e.target.value))}
+              onChange={(e) => setMonthlySpend(e.target.value)}
               onWheel={preventWheelChange}
             />
             <span className="suffix">/ month</span>
@@ -279,7 +288,7 @@ export default function App() {
               min="18"
               max="90"
               value={currentAge}
-              onChange={(e) => setCurrentAge(Number(e.target.value))}
+              onChange={(e) => setCurrentAge(e.target.value)}
               onWheel={preventWheelChange}
             />
           </label>
@@ -290,7 +299,7 @@ export default function App() {
               min="30"
               max="90"
               value={retirementAge}
-              onChange={(e) => setRetirementAge(Number(e.target.value))}
+              onChange={(e) => setRetirementAge(e.target.value)}
               onWheel={preventWheelChange}
             />
           </label>
@@ -369,7 +378,7 @@ export default function App() {
                   min="0"
                   step="1000"
                   value={currentAssets}
-                  onChange={(e) => setCurrentAssets(Number(e.target.value))}
+                  onChange={(e) => setCurrentAssets(e.target.value)}
                   onWheel={preventWheelChange}
                 />
               </div>
@@ -385,7 +394,7 @@ export default function App() {
                   min="0"
                   step="50"
                   value={monthlyContribution}
-                  onChange={(e) => setMonthlyContribution(Number(e.target.value))}
+                  onChange={(e) => setMonthlyContribution(e.target.value)}
                   onWheel={preventWheelChange}
                 />
                 <span className="suffix">/ month</span>
@@ -545,7 +554,7 @@ export default function App() {
             </div>
             {ssMonthly > 0 && (
               <p className="ss-note">
-                That covers {formatMoney(ssMonthly)} of your {formatMoney(monthlySpend)}/month, so
+                That covers {formatMoney(ssMonthly)} of your {formatMoney(monthlySpendNum)}/month, so
                 your investments only need to cover {formatMoney(coveredByInvestments)}/month.
               </p>
             )}
@@ -603,7 +612,7 @@ export default function App() {
                 min="70"
                 max="110"
                 value={planToAge}
-                onChange={(e) => setPlanToAge(Number(e.target.value))}
+                onChange={(e) => setPlanToAge(e.target.value)}
                 onWheel={preventWheelChange}
               />
               <small>
@@ -613,7 +622,7 @@ export default function App() {
               </small>
             </label>
             <p className="future-monthly-note">
-              At {inflation}% inflation, your {formatMoney(monthlySpend)}/month becomes about{' '}
+              At {inflation}% inflation, your {formatMoney(monthlySpendNum)}/month becomes about{' '}
               <strong>{formatMoney(desiredFutureMonthly)}/month</strong> by {retirementYear}.
             </p>
           </div>
