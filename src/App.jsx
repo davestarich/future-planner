@@ -38,7 +38,7 @@ const STATUS_DISPLAY = {
 export default function App() {
   // Step 1 inputs. Stored as strings so the fields can be cleared and edited
   // freely (numbers are parsed out below); avoids the stuck-leading-zero bug.
-  const [monthlySpend, setMonthlySpend] = useState('4000')
+  const [monthlySpend, setMonthlySpend] = useState('')
   const [currentAge, setCurrentAge] = useState('48')
   const [retirementAge, setRetirementAge] = useState('65')
 
@@ -221,7 +221,7 @@ export default function App() {
 
   return (
     <>
-      {showSticky && (
+      {showSticky && monthlySpendNum > 0 && (
         <div className="sticky-bar">
           <div className="sticky-inner">
             <label className="sticky-field">
@@ -264,7 +264,15 @@ export default function App() {
 
       <section className="card inputs" ref={inputsRef}>
         <label className="field">
-          <span className="q">How much do you want to spend each month in retirement?</span>
+          <span className="q">
+            How much do you want to spend each month in retirement?
+            <InfoTip>
+              Not sure? A common starting point is about 75 to 85% of what you spend now, since
+              costs like commuting, work expenses, and saving for retirement usually drop off. So
+              if you spend $8,000/month today, plan for roughly $6,000 to $6,800. It's a ballpark:
+              some people spend more early in retirement and less later.
+            </InfoTip>
+          </span>
           <small>In today's dollars: what you'd want to live on if it were now.</small>
           <div className="money-input">
             <span className="prefix">$</span>
@@ -272,6 +280,7 @@ export default function App() {
               type="number"
               min="0"
               step="100"
+              placeholder="4000"
               value={monthlySpend}
               onChange={(e) => setMonthlySpend(e.target.value)}
               onWheel={preventWheelChange}
@@ -309,6 +318,8 @@ export default function App() {
         </p>
       </section>
 
+      {monthlySpendNum > 0 ? (
+        <>
       <section className="results">
         <div className="result-card primary">
           <p className="result-label">Your retirement target</p>
@@ -628,6 +639,18 @@ export default function App() {
           </div>
         )}
       </section>
+        </>
+      ) : (
+        <section className="results">
+          <div className="card result-prompt">
+            <p className="result-prompt-up">↑</p>
+            <p className="result-prompt-text">
+              Enter your monthly spending above, and your personalized retirement target will
+              appear right here.
+            </p>
+          </div>
+        </section>
+      )}
 
       <footer className="disclaimer">
         A ballpark to help you think, not financial advice. Every number here rests on the
